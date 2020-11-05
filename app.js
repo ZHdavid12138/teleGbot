@@ -2,7 +2,7 @@ const { stat } = require('fs/promises');
 const fs = require('fs')
 const TeleBot = require('telebot')
 const bot = new TeleBot({
-    token: '1400299756:AAFCRDspSQku0QnUaGAN-vsQTXzAI0V-NOo', //Telegram Bot API token.
+    token: '', //Telegram Bot API token.
     allowedUpdates: [], // Optional. List the types of updates you want your bot to receive. Specify an empty list to receive all updates.
     usePlugins: ['askUser'], // Optional. Use user plugins from pluginFolder.
     pluginFolder: '../plugins/', // Optional. Plugin folder location.
