@@ -1,6 +1,6 @@
-const { stat } = require('fs/promises');
 const fs = require('fs')
 const TeleBot = require('telebot')
+const { Writefile, Readfile } = require('./readfile')
 const bot = new TeleBot({
     token: '', //Telegram Bot API token.
     allowedUpdates: [], // Optional. List the types of updates you want your bot to receive. Specify an empty list to receive all updates.
@@ -15,33 +15,42 @@ const bot = new TeleBot({
 //读取json配置
 var grop_list = fs.readFileSync('./user.json')
 grop_list = grop_list.toJSON()
-var bot_list = {
-    
-}
 
 //循环指令开始
-bot.on(['/start', '/hello'], (msg) => {
+bot.on(['/start', '/hello'], (msg) => Startplay(msg))
+//停止单个循环
+bot.on('/off', (msg) => Stopplay(msg))
+//私聊设置群组的循环内容和轮询时间
+bot.on('/set', (msg) => SetGroupInfo(msg));
+
+//开始轮询消息
+function Startplay(msg)
+{
     if(msg.from.username === 'Justin12138')//只接受指定用户的指令
     {
-
+        Writefile('/user.json').then((res)=>{
+            console.log(res)
+        })
+         //尝试解析json的群组信息如果没有直接返回
         try {
-            var chat = bot_list[msg.chat.title]
+         var chat = bot_list[msg.chat.title]
             chat.status = true
             msg.reply.text('主人，宝宝已经收到！')
         } catch (error) {
             return error
         }
         setInterval(() =>{
+            //在开始前判断是否继续
             if(chat.status)
                 msg.reply.text(chat.text)
             else
                 return
         },chat.setInterval)
-        
     }
-})
-//停止单个循环
-bot.on('/off', (msg) => {
+}
+//停止单个轮询
+function Stopplay(msg)
+{
     if(msg.from.username === 'Justin12138')
     {
         try {
@@ -52,10 +61,7 @@ bot.on('/off', (msg) => {
             return error
         }
     }
-})
-
-//私聊设置群组的循环内容和轮询时间
-bot.on('/set', (msg) => SetGroupInfo(msg));
+}
 
 function SetGroupInfo(msg)
 {
