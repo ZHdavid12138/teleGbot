@@ -1,8 +1,1 @@
-{
-    "nmm" : {
-        "setInterval": 5000,
-        "text" : "主人完成的任务罢了",
-        "status": false
-    }
-    
-}
+{"nmm":{"setInterval":5000,"text":"newt","status":"true"},"pitx":{"setInterval":5000,"text":"暂未设置内容","status":false}}
