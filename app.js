@@ -47,14 +47,18 @@ function Setinfoevents(item) {
             if (this.statusc === val) return//返回无用参数
             this.statusc = val
             if (val === 1) {
-                let setI = setInterval(() => {
-                    if (info[item].status == 0) return clearInterval(setI)//循环前判断状态
-                    bot.sendMessage(info[item].id, info[item].text)
-                }, info[item].setInterval * 1000)
-                AllsetI[item] = setI
+                Start()
             }
         }
     })
+    function Start() {
+        let setI = setInterval(() => {
+            if (info[item].status == 0) return clearInterval(setI)//循环前判断状态
+            bot.sendMessage(info[item].id, info[item].text)
+        }, info[item].setInterval * 1000)
+        AllsetI[item] = setI
+    }
+    if(info[item].status) Start()
 }
 
 //开启全部轮询消息
@@ -118,26 +122,27 @@ function SetGroupInfo(msg) {
                 }
                 return bot.sendMessage(msg.chat.id, text, button)
             }
-            if(!arry[2] || !arry[3]) return msg.reply.text('参数缺失或没有此值')
+            if(!arry[2] || !arry[3] || arry[2] > 36000 || arry[2] < 5) return msg.reply.text('参数缺失或没有此值')
             msg.reply.text('请输入文本内容')
             bot.on("text", (meassage) => {
                 if (meassage.chat.username === AmindN) {
+                    bot.cleanEvent('text')
                     arry[4] = meassage.text
                     msg.reply.text('等待获取id,请邀请机器人到群组。如已在群组请重新拉群')
                     //当有消息更新时存下群组id信息
                     bot.on('update', (msg) => {
-                        if (msg[0].message.new_chat_participant && msg[0].message.new_chat_participant.is_bot) {//获取新入群的消息
+                        if (msg[0].message.new_chat_participant !== undefined && msg[0].message.new_chat_participant.is_bot) {//获取新入群的消息
                             arry[0] = msg[0].message.chat.id
-                            Updateinfo(arry).then(() => {
-                                meassage.reply.text('添加成功')
-                                return bot.cleanEvent('update')
-
-                            }, () => {
-                                meassage.reply.text('写入文件失败')
-                                return bot.cleanEvent('update')
-                            })
-                            Setinfoevents(arry[0])
-                            bot.cleanEvent('text')
+                            info[arry[1]] = {
+                                id: arry[0],
+                                setInterval: Number(arry[2]),
+                                text: arry[4],
+                                status: Number(arry[3]) % 2
+                            }
+                            Setinfoevents(arry[1])
+                            bot.sendMessage(meassage.chat.id, '添加成功')
+                            Writefile('./user.json', JSON.stringify(info))
+                            return bot.cleanEvent('update')
                         }
                     })
                 }
@@ -178,13 +183,6 @@ function Updateinfo(arry) {
                 if (info[key].status !== arry[3]) info[key].status = arry[3] //防止多重运行
                 info[key].setInterval = arry[2]
                 info[key].text = arry[4]
-            } else if (arry[0]) {
-                info[key] = {
-                    id: arry[0],
-                    setInterval: Number(arry[2]),
-                    text: arry[4],
-                    status: Number(arry[3])
-                }
             } else {
                 msg.reply.text('更新错误')
             }
