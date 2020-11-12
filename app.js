@@ -17,9 +17,27 @@ const AmindN = 'dada12138' //管理员用户名
 console.log('正在读取配置文件')
 var info = JSON.parse(fs.readFileSync('./user.json').toString())
 console.log('读取完成')
+
 var AllsetI = {}
-//监听文本改变或状态改变
+
 for (let item in info) {
+    Setinfoevents(item)
+}
+
+
+
+bot.on('/on', (msg) => Startplay(msg))
+bot.on('/start', (msg) => msg.reply.text(`@${AmindN}`))
+bot.on('/off', (msg) => Stopplay(msg))
+bot.on('/set', (msg) => SetGroupInfo(msg))
+bot.on('/list', (msg) => ShowGrouplist(msg))
+bot.on('/remove', (msg) => RemoveGroupUser(msg))
+bot.on('callbackQuery', (callbackQuery) => callbackFuc(callbackQuery));
+
+
+
+//为每个对象监听状态改变
+function Setinfoevents(item) {
     info[item].statusc = info[item].status
     Object.defineProperty(info[item], "status", {
         get: function () {
@@ -29,27 +47,15 @@ for (let item in info) {
             if (this.statusc === val) return//返回无用参数
             this.statusc = val
             if (val === 1) {
-                StartA()
+                let setI = setInterval(() => {
+                    if (info[item].status == 0) return clearInterval(setI)//循环前判断状态
+                    bot.sendMessage(info[item].id, info[item].text)
+                }, info[item].setInterval * 1000)
+                AllsetI[item] = setI
             }
         }
     })
-    function StartA() {
-        var setI = setInterval(() => {
-            if (info[item].status == 0) return clearInterval(setI)//循环前判断状态
-            bot.sendMessage(info[item].id, info[item].text)
-        }, info[item].setInterval * 1000)
-        AllsetI[item] = setI
-    }
-    StartA()
 }
-
-bot.on('/on', (msg) => Startplay(msg))
-bot.on('/start', (msg) => msg.reply.text(`@${AmindN}`))
-bot.on('/off', (msg) => Stopplay(msg))
-bot.on('/set', (msg) => SetGroupInfo(msg))
-bot.on('/list', (msg) => ShowGrouplist(msg))
-bot.on('/remove', (msg) => RemoveGroupUser(msg))
-bot.on('callbackQuery', (callbackQuery) => callbackFuc(callbackQuery));
 
 //开启全部轮询消息
 function Startplay(msg) {
@@ -100,8 +106,9 @@ function SetGroupInfo(msg) {
                 for(let value in info) {
                     inline_keyboard.push([
                         { text: value, callback_data: `{ "data" : "${value}","type" : "update" }` },
+                        { text: `轮询时间：${info[value].setInterval}`, callback_data: `{ "data" : "${value}","type" : "setInterval" }` },
                         { text: `当前状态：${info[value].status ? '开' : '关'}`, callback_data: `{ "data" : "${value}","type" : "status" }` },
-                        { text: '修改文本内容', callback_data: `{ "data" : "${value}","type" : "edittext" }` }
+                        { text: '修改内容', callback_data: `{ "data" : "${value}","type" : "edittext" }` }
                     ])
                 }
                 let button = {
@@ -129,6 +136,7 @@ function SetGroupInfo(msg) {
                                 meassage.reply.text('写入文件失败')
                                 return bot.cleanEvent('update')
                             })
+                            Setinfoevents(arry[0])
                             bot.cleanEvent('text')
                         }
                     })
@@ -189,6 +197,7 @@ function Updateinfo(arry) {
     })
 }
 
+//回调事件判断和处理
 function callbackFuc(data) {
     let butData = JSON.parse(data.data)
     // console.log(data)
@@ -201,6 +210,9 @@ function callbackFuc(data) {
             break
         case 'update':
             showText()
+            break
+        case 'setInterval':
+            updatsetI()
             break
         default:
             console.log('按钮类型未定义')
@@ -235,13 +247,33 @@ function callbackFuc(data) {
         let button = {
             replyMarkup: data.message.reply_markup
         }
-        for(let i = 0;i < data.message.reply_markup.inline_keyboard.length;i++)
-            for(let k = 0;k < data.message.reply_markup.inline_keyboard[i].length;k++) {
-                if(data.message.reply_markup.inline_keyboard[i][k].callback_data == data.data)
-                button.replyMarkup.inline_keyboard[i][k].text = `当前状态：${info[butData.data].status ? '开' : '关'}`
-            }
+        for(let i = 0;i < data.message.reply_markup.inline_keyboard.length;i++){
+                if(data.message.reply_markup.inline_keyboard[i][2].callback_data == data.data)
+                button.replyMarkup.inline_keyboard[i][2].text = `当前状态：${info[butData.data].status ? '开' : '关'}`
+        }
         bot.editMessageReplyMarkup({ messageId: data.message.message_id, chatId: data.message.chat.id }, button)
         Writefile('./user.json', JSON.stringify(info))
+    }
+    function updatsetI() {
+        bot.sendMessage(data.message.chat.id, '请输入新的轮询时间：回1跳过；')
+        bot.on("text", (meassage) => {
+            if (meassage.chat.username === AmindN) {
+                let t= Number(meassage.text)
+                if(t >= 5 && t < 36000){
+                    info[butData.data].setInterval = Number(meassage.text)
+                    let button = {
+                        replyMarkup: data.message.reply_markup
+                    }
+                    for(let i = 0;i < data.message.reply_markup.inline_keyboard.length;i++){
+                        if(data.message.reply_markup.inline_keyboard[i][1].callback_data == data.data)
+                        button.replyMarkup.inline_keyboard[i][1].text =  `轮询时间：${info[butData.data].setInterval}`
+                    }
+                    bot.editMessageReplyMarkup({ messageId: data.message.message_id, chatId: data.message.chat.id }, button)
+                    Writefile('./user.json', JSON.stringify(info))
+                }
+                return bot.cleanEvent('text')
+            }
+        })
     }
 }
 
@@ -276,6 +308,7 @@ function RemoveGroupUser(msg) {
 function ShowGrouplist(msg) {
 
 }
+
 //搜索功能
 function Serach(age) {
     if (age == null || age == 0 || age == '' || age == ' ')
