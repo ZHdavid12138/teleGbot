@@ -2,7 +2,7 @@ const fs = require('fs')
 const TeleBot = require('telebot')
 const { Writefile, Readfile } = require('./readfile')
 const bot = new TeleBot({
-    token: '1400299756:AAFCRDspSQku0QnUaGAN-vsQTXzAI0V-NOo', //Telegram bot API TOKEN.
+    token: '', //Telegram bot API TOKEN.
     allowedUpdates: [], // Optional. List the types of updates you want your bot to receive. Specify an empty list to receive all updates.
     usePlugins: ['askUser'], // Optional. Use user plugins from pluginFolder.
     pluginFolder: '../plugins/', // Optional. Plugin folder location.
@@ -12,7 +12,7 @@ const bot = new TeleBot({
         // }
     }
 });
-const AmindN = 'dada12138' //管理员用户名
+const AmindN = '' //管理员用户名
 //同步读取配置
 console.log('正在读取配置文件')
 var info = JSON.parse(fs.readFileSync('./user.json').toString())
