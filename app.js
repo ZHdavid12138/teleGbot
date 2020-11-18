@@ -12,7 +12,7 @@ const bot = new TeleBot({
         // }
     }
 });
-const AmindN = '' //管理员用户名
+const AmindN = ['',''] //管理员用户名
 //同步读取配置
 console.log('正在读取配置文件')
 var info = JSON.parse(fs.readFileSync('./user.json').toString())
@@ -27,7 +27,7 @@ for (let item in info) {
 
 
 bot.on('/on', (msg) => Startplay(msg))
-bot.on('/start', (msg) => msg.reply.text(`@${AmindN}`))
+bot.on('/start', (msg) => msg.reply.text(`@${AmindN[0]}`))
 bot.on('/off', (msg) => Stopplay(msg))
 bot.on('/set', (msg) => SetGroupInfo(msg))
 bot.on('/list', (msg) => ShowGrouplist(msg))
@@ -63,7 +63,7 @@ function Setinfoevents(item) {
 
 //开启全部轮询消息
 function Startplay(msg) {
-    if (msg.from.username === AmindN) {
+    if (boleadmin(msg.from.username)) {
         for (const key in info) {
             if (info.hasOwnProperty(key)) {
                 const element = info[key];
@@ -78,7 +78,7 @@ function Startplay(msg) {
 
 //停止全部轮询
 function Stopplay(msg) {
-    if (msg.from.username === AmindN) {
+    if (boleadmin(msg.from.username)) {
         for (const key in info) {
             if (info.hasOwnProperty(key)) {
                 const element = info[key];
@@ -98,7 +98,7 @@ function Stopplay(msg) {
 function SetGroupInfo(msg) {
     //添加更新群组配置表
     let from = msg.chat
-    if (from.username === AmindN && from.type === 'private') {
+    if (boleadmin(msg.from.username) && from.type === 'private') {
         let arry = msg.text.split(' ')
         if (arry[2] && (arry[2] < 5 || arry[2] > 36000)) {
             return msg.reply.text('间隔时间太短或太长')
@@ -125,7 +125,7 @@ function SetGroupInfo(msg) {
             if(!arry[2] || !arry[3] || arry[2] > 36000 || arry[2] < 5) return msg.reply.text('参数缺失或没有此值')
             msg.reply.text('请输入文本内容')
             bot.on("text", (meassage) => {
-                if (meassage.chat.username === AmindN) {
+                if (boleadmin(msg.from.username)) {
                     bot.cleanEvent('text')
                     arry[4] = meassage.text
                     msg.reply.text('等待获取id,请邀请机器人到群组。如已在群组请重新拉群')
@@ -227,7 +227,7 @@ function callbackFuc(data) {
     function editText() {
         bot.sendMessage(data.message.chat.id, '请输入文本内容')
         bot.on("text", (meassage) => {
-            if (meassage.chat.username === AmindN) {
+            if (boleadmin(msg.from.username)) {
                 let arry = []
                 arry[1] = butData.data
                 arry[4] = meassage.text
@@ -255,7 +255,7 @@ function callbackFuc(data) {
     function updatsetI() {
         bot.sendMessage(data.message.chat.id, '请输入新的轮询时间：回1跳过；')
         bot.on("text", (meassage) => {
-            if (meassage.chat.username === AmindN) {
+            if (boleadmin(msg.from.username)) {
                 let t= Number(meassage.text)
                 if(t >= 5 && t < 36000){
                     info[butData.data].setInterval = Number(meassage.text)
@@ -278,7 +278,7 @@ function callbackFuc(data) {
 function RemoveGroupUser(msg) {
     //删除用户配置
     let from = msg.chat
-    if (from.username === AmindN && from.type === 'private') {
+    if (boleadmin(msg.from.username) && from.type === 'private') {
         try {
             let arry = msg.text.split(' ')
             let json = {}
@@ -303,6 +303,12 @@ function RemoveGroupUser(msg) {
     }
     else return
 }
+
+function boleadmin(name) {
+    if(AmindN.indexOf(name) != -1) return true
+    else return false
+}
+
 function ShowGrouplist(msg) {
 
 }
